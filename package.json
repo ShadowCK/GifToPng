@@ -1,0 +1,15 @@
+{
+  "name": "gif-to-png",
+  "version": "1.0.0",
+  "description": "Converts each gif file under the working directory into a folder of frame[x].png files.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Zhao Jin",
+  "license": "GPL-3.0",
+  "dependencies": {
+    "gif-frames": "^0.4.1",
+    "sharp": "^0.33.4"
+  }
+}
