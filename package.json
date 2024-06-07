@@ -1,7 +1,7 @@
 {
   "name": "gif-to-png",
   "version": "1.0.0",
-  "description": "Converts each gif file under the working directory into a folder of frame[x].png files.",
+  "description": "Converts each gif file under './input' into a folder of frame[x].png files. under './output' (./ is current working directory)",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",

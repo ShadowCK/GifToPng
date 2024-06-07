@@ -23,7 +23,7 @@ function streamToBuffer(stream) {
 // 转换 GIF 为 PNG 帧
 async function convertGifToPngFrames(filePath) {
   const fileName = path.basename(filePath, path.extname(filePath));
-  const outputDir = path.join(__dirname, fileName);
+  const outputDir = path.join(__dirname, 'output', fileName);
 
   createDirIfNotExists(outputDir);
 
@@ -48,17 +48,28 @@ async function convertGifToPngFrames(filePath) {
   }
 }
 
-// 读取当前目录下的所有 GIF 文件
+// 读取指定目录下的所有 GIF 文件
 function getGifFiles(dir) {
   return fs.readdirSync(dir).filter((file) => path.extname(file).toLowerCase() === '.gif');
 }
 
 // 主函数
 async function main() {
-  const gifFiles = getGifFiles(__dirname);
+  const inputDir = path.join(__dirname, 'input');
+  const outputDir = path.join(__dirname, 'output');
+
+  createDirIfNotExists(inputDir);
+  createDirIfNotExists(outputDir);
+
+  const gifFiles = getGifFiles(inputDir);
+
+  if (gifFiles.length === 0) {
+    console.log('No GIF files found in the "input" directory.');
+    return;
+  }
 
   for (const gifFile of gifFiles) {
-    await convertGifToPngFrames(path.join(__dirname, gifFile));
+    await convertGifToPngFrames(path.join(inputDir, gifFile));
   }
 }
 
