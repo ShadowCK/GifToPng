@@ -3,14 +3,14 @@ const path = require('path');
 const gifFrames = require('gif-frames');
 const sharp = require('sharp');
 
-// 创建文件夹（如果不存在）
+// Create directory if it does not exist
 function createDirIfNotExists(dir) {
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
   }
 }
 
-// 将 ReadableStream 转换为 Buffer
+// Convert ReadableStream to Buffer
 function streamToBuffer(stream) {
   return new Promise((resolve, reject) => {
     const chunks = [];
@@ -20,26 +20,26 @@ function streamToBuffer(stream) {
   });
 }
 
-// 转换 GIF 为 PNG 帧
-async function convertGifToPngFrames(filePath) {
+// Convert GIF to PNG frames
+async function convertGifToPngFrames(filePath, outputDir) {
   const fileName = path.basename(filePath, path.extname(filePath));
-  const outputDir = path.join(__dirname, 'output', fileName);
+  const outputFilePath = path.join(outputDir, fileName);
 
-  createDirIfNotExists(outputDir);
+  createDirIfNotExists(outputFilePath);
 
   try {
     const frameData = await gifFrames({ url: filePath, frames: 'all', outputType: 'png' });
 
     for (let i = 0; i < frameData.length; i++) {
       const frame = frameData[i];
-      const outputFilePath = path.join(outputDir, `${i + 1}.png`);
+      const frameOutputPath = path.join(outputFilePath, `${i + 1}.png`);
 
-      // 将帧数据转换为 Buffer
+      // Convert frame data to Buffer
       const buffer = await streamToBuffer(frame.getImage());
 
-      await sharp(buffer).toFile(outputFilePath);
+      await sharp(buffer).toFile(frameOutputPath);
 
-      console.log(`Saved frame ${i + 1} to ${outputFilePath}`);
+      console.log(`Saved frame ${i + 1} to ${frameOutputPath}`);
     }
 
     console.log(`Finished converting ${fileName}.gif`);
@@ -48,12 +48,25 @@ async function convertGifToPngFrames(filePath) {
   }
 }
 
-// 读取指定目录下的所有 GIF 文件
-function getGifFiles(dir) {
-  return fs.readdirSync(dir).filter((file) => path.extname(file).toLowerCase() === '.gif');
+// Recursively get all GIF files in the directory
+function getGifFilesRecursively(dir) {
+  let results = [];
+
+  const list = fs.readdirSync(dir);
+  list.forEach((file) => {
+    const filePath = path.join(dir, file);
+    const stat = fs.statSync(filePath);
+    if (stat && stat.isDirectory()) {
+      results = results.concat(getGifFilesRecursively(filePath));
+    } else if (path.extname(file).toLowerCase() === '.gif') {
+      results.push(filePath);
+    }
+  });
+
+  return results;
 }
 
-// 主函数
+// Main function
 async function main() {
   const inputDir = path.join(__dirname, 'input');
   const outputDir = path.join(__dirname, 'output');
@@ -61,15 +74,18 @@ async function main() {
   createDirIfNotExists(inputDir);
   createDirIfNotExists(outputDir);
 
-  const gifFiles = getGifFiles(inputDir);
+  const gifFiles = getGifFilesRecursively(inputDir);
 
   if (gifFiles.length === 0) {
-    console.log('No GIF files found in the "input" directory.');
+    console.log('No GIF files found in the input directory.');
     return;
   }
 
   for (const gifFile of gifFiles) {
-    await convertGifToPngFrames(path.join(inputDir, gifFile));
+    const relativePath = path.relative(inputDir, gifFile);
+    const outputFilePath = path.join(outputDir, path.dirname(relativePath));
+    createDirIfNotExists(outputFilePath);
+    await convertGifToPngFrames(gifFile, outputFilePath);
   }
 }
 
